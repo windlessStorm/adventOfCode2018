@@ -32,6 +32,46 @@ func readLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
+func isLevenshteinDistEqualsOne(firstString string, secondString string) (bool, int) {
+	mismatchCount := 0
+	mismatchIndex := -1
+	i := 0
+	// fmt.Println("first string: ", firstString, "\nSecond string: ", secondString)
+	for i < len(firstString) {
+		if firstString[i] != secondString[i] {
+			// fmt.Println("found mismatch")
+			mismatchIndex = i
+			mismatchCount++
+		}
+		if mismatchCount > 1 {
+			return false, mismatchIndex
+		}
+		i++
+	}
+	// fmt.Println("Found our box. returning:", mismatchIndex)
+	return true, mismatchIndex
+}
+
+func findCorrectBoxID(lines []string) (string, int) {
+	i := 0
+	for i < len(lines) {
+		j := i + 1
+		for j < len(lines) {
+			firstString := lines[i]
+			secondString := lines[j]
+			// fmt.Println(i, lines[i])
+			// fmt.Println(j, lines[j])
+			ret, index := isLevenshteinDistEqualsOne(firstString, secondString)
+			if ret {
+				return firstString, index
+			}
+			j++
+		}
+		i++
+	}
+	return "", -1
+}
+
 func countRepeats(line string) (bool, bool) {
 	characterFrequency := make(map[byte]int, 0)
 	twoCount := 0
@@ -89,4 +129,6 @@ func main() {
 	lines, err := readLines(inputFile)
 	check(err)
 	fmt.Println("Checksum: ", findChecksum(lines))
+	id, index := findCorrectBoxID(lines)
+	fmt.Println("found the correct Box ID:", id, "with wrong index:", index)
 }
