@@ -51,26 +51,50 @@ func parsePlan(plan string) (int, int, int, int, int) {
 	return id, marginLeft, marginTop, width, hieght
 }
 
-func drawPlans(plans []string, fabric [][]int) ([][]int, int) {
+/* 
+This draws the plans on our fabric, also keeps track of overlapping cell counts, and filter out the 
+best plan ID, which is non-overlapping rectangle. 
+
+All rectangles/plans, which we draw participates in best plan competition, we keep adding and deleting 
+potentially best plan to a list. At the end of this function execution, 
+just the BEST of the BEST only non-overlapping plan will remain in that list- our winner
+*/
+func drawPlans(plans []string, fabric [][]int) ([][]int, int, map[int]bool) {
 	i := 0
 	overlapArea := 0
+	hasOverlap := false
+	bestFabricID := map[int]bool{} /* Best plan competition, keep adding and deleting potential best plans */
 	for i < len(plans) {
 		id, marginLeft, marginTop, width, hieght:= parsePlan(plans[i])
 		for j:= marginLeft; j < marginLeft + width; j++ {
 			for k:= marginTop; k < marginTop + hieght; k++ {
-				if fabric[j][k] == 0 {
+				if fabric[j][k] == 0 { /* Cell not part of any plan till now, mark it as part of current plan*/
 					fabric[j][k] = id
-				} else if	fabric[j][k] == -1 {
+				} else if	fabric[j][k] == -1 { /* Already a overlapping cell*/
+						hasOverlap = true
 						continue
-					} else {
-					fabric[j][k] = -1
-					overlapArea++
-				}
+					} else { /* Already marked by some other plan, make this -1 to show now it is overlapping*/
+						hasOverlap = true
+
+						/* if we overlap on some ID which was contender for best plan, then it is not best plan for sure,
+						Delete it from best plan list */
+						if bestFabricID[fabric[j][k]] { /* check if id is in best plan competition*/
+							delete(bestFabricID, fabric[j][k])
+						}
+						fabric[j][k] = -1
+						overlapArea++
+					}
 			}
- 		}
+		}
+		if !hasOverlap{
+			bestFabricID[id] = true
+			// fmt.Println("Best fabric set now have:", bestFabricID)
+		}
+		hasOverlap = false /* Reset the overlap flag*/
 		i++
 	}
-	return fabric, overlapArea
+	// fmt.Println("All done and dusted we have a winner over here guys and it isss:", bestFabricID )
+	return fabric, overlapArea, bestFabricID
 }
 
 func createFabric(totalRows int, totalColumns int) [][]int {
@@ -86,7 +110,8 @@ func main() {
 	plans, err := readLines(inputFile)
 	check(err)
 	fabric := createFabric(1000, 1000)
-	fabric, overlapArea := drawPlans(plans, fabric)
+	fabric, overlapArea, bestFabricID := drawPlans(plans, fabric)
 	// fmt.Println(fabric)
 	fmt.Println("Overlaping area:", overlapArea)
+	fmt.Println("Best fabric piece without any overlap is:", bestFabricID)
 }
