@@ -52,6 +52,8 @@ func parsePlan(plan string) (int, int, int, int, int) {
 }
 
 /* 
+Single pass solution:
+
 This draws the plans on our fabric, also keeps track of overlapping cell counts, and filter out the 
 best plan ID, which is non-overlapping rectangle. 
 
